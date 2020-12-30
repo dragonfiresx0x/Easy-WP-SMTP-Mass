@@ -62,13 +62,19 @@ def checksmtp(url):
 def verifyURL(url):
     r = requests.get(f'http://{url}/', verify=False, timeout=10, allow_redirects=False, headers=headers)
     if r.status_code == 200:
-        r.url = r.url.strip('/') + '/'
-        checksmtp(r.url)
+        checksmtp(r.url.strip('/'))
     if r.status_code == 301:
         r = requests.get(f'{r.headers["Location"]}', verify=False, timeout=10, allow_redirects=False, headers=headers)
         if r.status_code == 200:
-            r.url = r.url.strip('/') + '/'
-            checksmtp(r.url)
+            checksmtp(r.url.strip('/'))
+        else:
+            r = requests.get(f'http://www.{url}/', verify=False, timeout=10, allow_redirects=False, headers=headers)
+            if r.status_code == 200:
+                checksmtp(r.url.strip('/'))
+            else:
+                r = requests.get(f'https://www.{url}/', verify=False, timeout=10, allow_redirects=False, headers=headers)
+                if r.status_code == 200:
+                    checksmtp(r.url.strip('/'))
 
 if __name__ == "__main__":
     inpFile = input("Enter your url list : ")
